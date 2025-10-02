@@ -1,18 +1,5 @@
 """
 URL configuration for config project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
@@ -21,6 +8,11 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.views.decorators.csrf import csrf_exempt
 
+openapi_tags = [
+    {"name": "Health", "description": "Service health check."},
+    {"name": "Products", "description": "CRUD operations for products."},
+]
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
@@ -28,9 +20,10 @@ urlpatterns = [
 
 schema_view = get_schema_view(
    openapi.Info(
-      title="My API",
+      title="Products API",
       default_version='v1',
-      description="Test description",
+      description="A REST API to manage products with CRUD operations.",
+      contact=openapi.Contact(name="API Support", email="support@example.com"),
    ),
    public=True,
    permission_classes=(permissions.AllowAny,),
@@ -51,13 +44,15 @@ def dynamic_schema_view(request, *args, **kwargs):
     url = get_full_url(request)
     view = get_schema_view(
         openapi.Info(
-            title="My API",
+            title="Products API",
             default_version='v1',
-            description="API Docs",
+            description="Interactive API documentation for Products service.",
+            contact=openapi.Contact(name="API Support", email="support@example.com"),
         ),
         public=True,
         url=url,
     )
+    # The with_ui view doesn't take tags directly, but tags are picked from view decorators.
     return view.with_ui('swagger', cache_timeout=0)(request)
 
 urlpatterns += [

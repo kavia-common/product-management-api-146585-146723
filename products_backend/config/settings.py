@@ -132,6 +132,31 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Django REST Framework defaults
+REST_FRAMEWORK = {
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
+    "DEFAULT_RENDERER_CLASSES": (
+        "rest_framework.renderers.JSONRenderer",
+    ),
+    "DEFAULT_PARSER_CLASSES": (
+        "rest_framework.parsers.JSONParser",
+    ),
+    "DEFAULT_PERMISSION_CLASSES": (
+        "rest_framework.permissions.AllowAny",
+    ),
+}
+
+# Admin site branding using Ocean Professional theme
+ADMIN_SITE_HEADER = "Products Admin"
+ADMIN_SITE_TITLE = "Products Admin"
+ADMIN_INDEX_TITLE = "Products Dashboard"
+from django.contrib import admin as _admin  # noqa: E402
+_admin.site.site_header = ADMIN_SITE_HEADER
+_admin.site.site_title = ADMIN_SITE_TITLE
+_admin.site.index_title = ADMIN_INDEX_TITLE
+
+# Basic CORS and proxy headers
 CORS_ALLOW_ALL_ORIGINS = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
