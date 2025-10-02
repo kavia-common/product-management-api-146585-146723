@@ -1,8 +1,10 @@
 from rest_framework import viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.db.models import F, Sum
+from decimal import Decimal
 
 from .models import Product
 from .serializers import ProductSerializer
@@ -31,6 +33,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         - PUT    /api/products/{id}/      -> update product (full)
         - PATCH  /api/products/{id}/      -> partial update product
         - DELETE /api/products/{id}/      -> delete product
+        - GET    /api/products/balance/   -> total balance of goods in stock
 
     Query Params (list):
         - search (optional): case-insensitive substring filter on name.
@@ -116,3 +119,40 @@ class ProductViewSet(viewsets.ModelViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         return super().destroy(request, *args, **kwargs)
+
+    @swagger_auto_schema(
+        operation_id="product_total_balance",
+        operation_summary="Get total stock balance",
+        operation_description="Returns the total balance of goods in stock, calculated as the sum of price × quantity for all products.",
+        responses={
+            200: openapi.Response(
+                description="Total balance computed successfully.",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "total_balance": openapi.Schema(
+                            type=openapi.TYPE_NUMBER,
+                            format="decimal",
+                            description="Total balance as a decimal number."
+                        )
+                    }
+                )
+            )
+        },
+        tags=["Products"],
+    )
+    @action(detail=False, methods=["get"], url_path="balance")
+    # PUBLIC_INTERFACE
+    def balance(self, request):
+        """
+        Calculates the total balance for all products in stock.
+
+        The balance is computed as sum(price * quantity) across all Product records.
+
+        Returns:
+            200 OK: JSON object { "total_balance": "<decimal as string>" }
+        """
+        agg = Product.objects.aggregate(total=Sum(F("price") * F("quantity")))
+        total = agg["total"] or Decimal("0.00")
+        # Convert Decimal to string to preserve precision in JSON response
+        return Response({"total_balance": str(total)})
